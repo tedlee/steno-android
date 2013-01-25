@@ -4,13 +4,9 @@
 <head>
 	<meta http-equiv="content-type" content="text/html; charset=utf-8" />
 	<link rel="stylesheet" href="../styles/style.css" type="text/css" />
-	<link rel="stylesheet" href="../styles/jquery-ui-1.10.0.custom.min.css" type="text/css" />
 	<link href="http://fonts.googleapis.com/css?family=Vollkorn" rel="stylesheet" type="text/css">
 	<link href="http://fonts.googleapis.com/css?family=Ubuntu:bold" rel="stylesheet" type="text/css">
-	<script type="text/javascript" src="http://maps.google.com/maps/api/js?sensor=false"></script>
 	<script src="../scripts/jquery.min.js"></script>
-	<script src="../scripts/main.js"></script>
-	<script src="../scripts/jquery-ui-1.10.0.custom.min.js"></script>
 
 	<title> <%= @title %> </title> 
 	<meta name="description" content="Steno" />
@@ -18,22 +14,36 @@
 </head>
 <body>
 
-
 	<div id="wrap">
 		<div id="main">
 			<div class="title">Steno</div>
+			<div id="logbox">
+				
+				<div class="log-entry">
+					<div class="log-date">
+						January 24th 2013
+					</div>
+					<div class="log-description">
+						Pushed simple changelog page for keeping track and gauging progress. Also added a handy dandy footer bar. Tomorrow we tackle the slider.
+					</div>
+				</div>
 
-			<div id="map-container">
-			<div id="map"></div>
-			</div><!--end map-container-->
+				<div class="log-entry">
+					<div class="log-date">
+						January 23rd 2013
+					</div>
+					<div class="log-description">
+						Worked on the web side of things building out the Sinatra app (mostly markup/JS) and implemented simple placemarker transitions using Google Maps 
+					</div>
+				</div>
 
+			</div>
 		</div>
 	</div>
 
 	<div id="footer">
 		<ul>
-			<li><a href="/changelog">Changelog</a></li>
-			<li>Steno</li>
+			<li><a href="/">Back to my Steno</a></li>
 		</ul>
 	</div>
 

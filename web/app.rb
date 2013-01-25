@@ -23,6 +23,12 @@ get "/" do
 	erb :index
 end
 
+get "/changelog" do
+	@title = "Steno - Changelog"
+	set :erb, :layout => false
+	erb :changelog
+end
+
 # API spec has been outlined here http://www.stypi.com/tedlee/Steno/api_spec.json
 
 
