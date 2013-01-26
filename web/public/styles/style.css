@@ -93,6 +93,13 @@ body {
 	width: 500px
 }
 
+.slider-box{
+	width: 800px;
+	margin-right: auto;
+	margin-left: auto;
+	margin-top: 30px;
+}
+
 /* Regular border-radius won't work here: http://stackoverflow.com/questions/10321606/how-can-i-make-my-google-map-v3-retain-rounded-corners */
 #map {
 	margin-right: auto;

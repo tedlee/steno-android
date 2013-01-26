@@ -23,6 +23,9 @@ function initialize() {
 		var result = [me.latLng.lat(), me.latLng.lng()];
 		transition(result);
 	});
+
+	$( "#slider" ).slider();
+
 }
 
 var numDeltas = 100;
