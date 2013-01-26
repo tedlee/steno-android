@@ -24,7 +24,7 @@ function initialize() {
 		transition(result);
 	});
 
-	$( "#slider" ).slider();
+	
 
 }
 
@@ -51,6 +51,38 @@ function moveMarker(){
 	}
 }
 
+function formatSeconds(seconds) {
+	hours = parseInt( seconds / 3600 ) % 24;
+	minutes = parseInt( seconds / 60 ) % 60;
+	seconds = parseInt(seconds % 60, 10);
+
+	return (hours < 10 ? "0" + hours : hours) + ":" + (minutes < 10 ? "0" + minutes : minutes) + ":" + (seconds  < 10 ? "0" + seconds : seconds);
+}
+
+function build_slider(){
+
+	var slider = $("#slider");
+	var startingSeconds = 0;
+	$( "#time" ).text( formatSeconds( startingSeconds ) );
+
+	slider.slider({
+		min: 0,
+		max: 86399,
+		step: 1,
+
+		slide: function( event, ui ) {
+			$( "#time" ).text( formatSeconds( ui.value ) );
+		}
+
+	});
+
+
+}
+
+
+
 $(document).ready(function() {
 	initialize();
+	build_slider();
 });
+

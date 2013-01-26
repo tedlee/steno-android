@@ -90,7 +90,8 @@ body {
 
 .log-description {
 	display: inline-block;
-	width: 500px
+	width: 500px;
+	line-height: 1.25;
 }
 
 .slider-box{
@@ -98,6 +99,17 @@ body {
 	margin-right: auto;
 	margin-left: auto;
 	margin-top: 30px;
+}
+
+#time {
+	margin-right: auto;
+	margin-left: auto;
+	text-align: center;
+	margin-top: 30px;
+	width: 300px;
+	font-family: Ubuntu, sans-serif;
+	font-size: 3em;
+	color: gray;
 }
 
 /* Regular border-radius won't work here: http://stackoverflow.com/questions/10321606/how-can-i-make-my-google-map-v3-retain-rounded-corners */
