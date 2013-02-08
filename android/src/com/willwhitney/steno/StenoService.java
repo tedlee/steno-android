@@ -1,5 +1,4 @@
 package com.willwhitney.steno;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -32,8 +31,9 @@ public class StenoService extends Service {
 	private WakeLock wakeLock;
 
 	private SpeechRecognizer recognizer;
+	private RecognitionListener listener;
 	private LocationManager locationManager;
-	private TranscriptCache transcriptCache = new TranscriptCache("will");
+	private TranscriptCache transcriptCache = new TranscriptCache(null);
 
 	public static StenoService instance;
 
@@ -42,15 +42,17 @@ public class StenoService extends Service {
 
     // Unique Identification Number for the Notification.
     // We use it on Notification start, and to cancel it.
-    private int NOTIFICATION = 19935;
+    private int NOTIFICATION = 0;
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
     	Log.d("Steno", "Intent from onStartCommand: " + intent);
     	if (intent != null) {
-    		if (intent.hasExtra("start_listening")) {
-        		listen();
-        		return START_STICKY;
+    		if (intent.hasExtra("terminate")) {
+        		stopSelf();
+        		return START_NOT_STICKY;
+        	} else if (intent.hasExtra("username")) {
+        		transcriptCache = new TranscriptCache(intent.getStringExtra("username"));
         	}
     	}
 
@@ -139,9 +141,10 @@ public class StenoService extends Service {
     	Intent intent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
     	intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM);
     	intent.putExtra(RecognizerIntent.EXTRA_CALLING_PACKAGE, "com.willwhitney.Steno");
-
-    	recognizer = SpeechRecognizer.createSpeechRecognizer(this.getApplicationContext());
-    	RecognitionListener listener = new RecognitionListener() {
+    	if (recognizer == null) {
+    		recognizer = SpeechRecognizer.createSpeechRecognizer(this);
+    	}
+    	listener = new RecognitionListener() {
 
     		@Override
     	    public void onResults(Bundle results) {
@@ -221,6 +224,12 @@ public class StenoService extends Service {
     public void onDestroy() {
         // Cancel the persistent notification.
         mNM.cancel(NOTIFICATION);
+        listener = null;
+        recognizer.cancel();
+        recognizer.destroy();
+
+        mHandler.removeCallbacks(recognitionStopper);
+        mHandler.post(new TranscriptUploader());
 
         // Tell the user we stopped.
         Toast.makeText(this, "Steno service stopped.", Toast.LENGTH_SHORT).show();
@@ -279,7 +288,7 @@ public class StenoService extends Service {
 			try {
 				attempts++;
 				StenoApiClient.uploadTranscripts(json);
-			} catch (IOException e) {
+			} catch (Exception e) {
 				if (attempts < MAX_ATTEMPTS) {
 					try {
 						Thread.sleep(1 * 1000);
@@ -287,6 +296,8 @@ public class StenoService extends Service {
 					} catch (InterruptedException e1) {
 						Log.e("Steno", "TranscriptUploader interrupted during retry. Uploading abandoned.");
 					}
+				} else {
+					Toast.makeText(StenoService.this, "Could not upload transcript after " + MAX_ATTEMPTS + " attempts.", Toast.LENGTH_SHORT).show();
 				}
 			}
 		}
