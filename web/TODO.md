@@ -11,4 +11,9 @@
 - Implement smooth placemarker transitions between coordinates  
 
 **Latest Screenshot:**  
+
+![Steno Screenshot](http://f.cl.ly/items/1K2n2B0w2S434035190S/Screen%20Shot%202013-01-26%20at%202.36.55%20AM.png)
+
+**Screenshot (Jan 24 2013):**
+
 ![Steno Screenshot](http://f.cl.ly/items/3B0a042V1M1p3n2R1L16/Screen%20Shot%202013-01-24%20at%202.33.48%20AM.png)
