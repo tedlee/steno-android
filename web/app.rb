@@ -2,6 +2,7 @@ require "sinatra"
 require "data_mapper"
 require "json"
 require "sinatra/contrib"
+require "jsonify"
 
 set :views, settings.root + '/views'
 
@@ -106,6 +107,41 @@ post "/users" do
 
     Moment.create(:timestamp => timestamp, :lat => lat, :lon => lon, :transcription => transcription, :created_at => Time.now, :user_username => @user.username)
     json "username" => username, "timestamp" => timestamp, "lat" => lat, "lon" => lon, "transcription" => transcription
+end
+
+# generates the webpage
+get "/:username" do
+    @user = User.get params[:username]
+
+    if @user
+        @title = "The Steno of #{@user.username}"
+        erb :user
+    else
+        "That user doesn't exist yet :("
+    end
+end
+
+# return API call
+get "/api/users/:username" do
+    @user = User.get params[:username]
+    #@user.moments.reverse.each do |moment|
+
+    if @user
+        # JSON reponse containing all user moments
+
+        content_type :json
+        response = Jsonify::Builder.new(:format => :pretty)
+        response.moments(@user.moments) do |moment|
+            response.timestamp moment.timestamp
+            response.transcription moment.transcription
+            response.lat moment.lat
+            response.lon moment.lon
+        end
+
+        response.compile!
+    else
+        "That user doesn't exist yet :("
+    end
 end
 
 not_found do  
