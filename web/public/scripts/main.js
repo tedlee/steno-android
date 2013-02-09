@@ -34,6 +34,7 @@ var i = 0;
 var deltaLat;
 var deltaLng;
 function transition(result){
+	console.log(result);
 	i = 0;
 	deltaLat = (result[0] - position[0])/numDeltas;
 	deltaLng = (result[1] - position[1])/numDeltas;
@@ -51,38 +52,60 @@ function moveMarker(){
 	}
 }
 
-function formatSeconds(seconds) {
-	hours = parseInt( seconds / 3600 ) % 24;
-	minutes = parseInt( seconds / 60 ) % 60;
-	seconds = parseInt(seconds % 60, 10);
-
-	return (hours < 10 ? "0" + hours : hours) + ":" + (minutes < 10 ? "0" + minutes : minutes) + ":" + (seconds  < 10 ? "0" + seconds : seconds);
-}
-
-function build_slider(){
+function build_slider(data){
 
 	var slider = $("#slider");
+	min_time = data['moments'][0]['timestamp'] 
+	max_time = data['moments'][0]['timestamp'] 
+
+
+	for (i in data['moments']) {
+		if (data['moments'][i]['timestamp'] < min_time) {
+			min_time = data['moments'][i]['timestamp']
+		} else if (data['moments'][i]['timestamp'] > max_time) {
+			max_time = data['moments'][i]['timestamp']
+		}
+	}
+
+	console.log("max_time: " + max_time);
+	console.log("min_time: " + min_time);
+
+
 	var startingSeconds = 0;
-	$( "#time" ).text( formatSeconds( startingSeconds ) );
+	$( "#time" ).text( min_time );
 
 	slider.slider({
-		min: 0,
-		max: 86399,
-		step: 1,
+		min: min_time,
+		max: max_time,
+		step: 10,
+		value: min_time,
 
 		slide: function( event, ui ) {
-			$( "#time" ).text( formatSeconds( ui.value ) );
-		}
+			$( "#time" ).text(  ui.value );
+			$( ".moments-box").empty()
+			$( ".moments-box" ).text(data['moments'][(ui.value - min_time)/10]['transcription'])
 
+			var result = [data['moments'][ (ui.value - min_time)/10 ]['lat'], data['moments'][ (ui.value - min_time)/10 ]['lon']];
+			transition(result);
+
+		}
 	});
 
+}
 
+function makeRequest(username) {
+    var requestURL = "/api/users/" + username
+    $.getJSON(requestURL, function(data){
+    	//console.log(data)
+    	build_slider(data)
+    });
 }
 
 
 
 $(document).ready(function() {
 	initialize();
-	build_slider();
+	//build_slider();
+	makeRequest(username)
 });
 
