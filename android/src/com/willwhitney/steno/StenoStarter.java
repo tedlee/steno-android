@@ -16,7 +16,12 @@ import android.widget.TextView;
 public class StenoStarter extends Activity {
 
 	public static final String NEW_UTTERANCE_KEY = "NEW_UTTERANCE";
+	public static final String SERVICE_CREATED_KEY = "SERVICE_CREATED";
+	public static final String SERVICE_TERMINATED_KEY = "SERVICE_TERMINATED";
 
+	private View loginButton;
+	private View logoutButton;
+	private EditText usernameField;
 	private TextView mostRecentContent;
 
 	@Override
@@ -24,9 +29,9 @@ public class StenoStarter extends Activity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.login);
 
-        final View loginButton = findViewById(R.id.login_button);
-        final View logoutButton = findViewById(R.id.logout_button);
-        final EditText usernameField = (EditText) findViewById(R.id.username);
+        loginButton = findViewById(R.id.login_button);
+        logoutButton = findViewById(R.id.logout_button);
+        usernameField = (EditText) findViewById(R.id.username);
 
         mostRecentContent = (TextView) findViewById(R.id.most_recent_content);
 
@@ -34,18 +39,7 @@ public class StenoStarter extends Activity {
 
 			@Override
 			public void onClick(View v) {
-				Log.d("Steno", "Starting service.");
-		        Intent serviceIntent = new Intent(StenoStarter.this, StenoService.class);
-		        serviceIntent.putExtra("username", usernameField.getText().toString());
-		        startService(serviceIntent);
-
-		        View mostRecentLabel = findViewById(R.id.most_recent_label);
-
-		        loginButton.setVisibility(View.GONE);
-		        logoutButton.setVisibility(View.VISIBLE);
-		        mostRecentLabel.setVisibility(View.VISIBLE);
-		        mostRecentContent.setVisibility(View.VISIBLE);
-		        usernameField.setEnabled(false);
+				start();
 			}
         });
 
@@ -53,28 +47,48 @@ public class StenoStarter extends Activity {
 
 			@Override
 			public void onClick(View v) {
-				Log.d("Steno", "Stopping service.");
-		        Intent serviceIntent = new Intent(StenoStarter.this, StenoService.class);
-		        serviceIntent.putExtra("terminate", true);
-		        startService(serviceIntent);
-
-		        logoutButton.setVisibility(View.GONE);
-		        loginButton.setVisibility(View.VISIBLE);
-		        usernameField.setEnabled(true);
+				stop();
 			}
         });
+	}
+
+	private void start() {
+		Log.d("Steno", "Starting service.");
+        Intent serviceIntent = new Intent(StenoStarter.this, StenoService.class);
+        serviceIntent.putExtra("username", usernameField.getText().toString());
+        startService(serviceIntent);
+	}
+
+	private void stop() {
+		Log.d("Steno", "Stopping service.");
+        Intent serviceIntent = new Intent(StenoStarter.this, StenoService.class);
+        serviceIntent.putExtra("terminate", true);
+        startService(serviceIntent);
 	}
 
 	private BroadcastReceiver newUtteranceReceiver = new BroadcastReceiver() {
 
 		@Override
 		public void onReceive(Context context, Intent intent) {
-			if (intent.hasExtra(NEW_UTTERANCE_KEY)) {
-				mostRecentContent.setText(intent.getStringExtra(NEW_UTTERANCE_KEY));
+			String action = intent.getAction();
+			if (action == SERVICE_CREATED_KEY) {
+				View mostRecentLabel = findViewById(R.id.most_recent_label);
+
+		        loginButton.setVisibility(View.GONE);
+		        logoutButton.setVisibility(View.VISIBLE);
+		        mostRecentLabel.setVisibility(View.VISIBLE);
+		        mostRecentContent.setVisibility(View.VISIBLE);
+		        usernameField.setEnabled(false);
+			} else if (action == SERVICE_TERMINATED_KEY) {
+				logoutButton.setVisibility(View.GONE);
+		        loginButton.setVisibility(View.VISIBLE);
+		        usernameField.setEnabled(true);
+			} else if (action == NEW_UTTERANCE_KEY) {
+				if (intent.hasExtra(NEW_UTTERANCE_KEY)) {
+					mostRecentContent.setText(intent.getStringExtra(NEW_UTTERANCE_KEY));
+				}
 			}
-
 		}
-
 	};
 
 	@Override
@@ -82,6 +96,8 @@ public class StenoStarter extends Activity {
 		super.onResume();
 		IntentFilter filter = new IntentFilter();
         filter.addAction(NEW_UTTERANCE_KEY);
+        filter.addAction(SERVICE_CREATED_KEY);
+        filter.addAction(SERVICE_TERMINATED_KEY);
         LocalBroadcastManager.getInstance(this).registerReceiver(newUtteranceReceiver, filter);
 	}
 

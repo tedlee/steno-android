@@ -18,7 +18,8 @@
         
         <activity
             android:name=".StenoStarter"
-            android:label="Steno" >
+            android:label="Steno" 
+            android:launchMode="singleTop" >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />    

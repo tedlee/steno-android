@@ -4,6 +4,7 @@ import java.util.List;
 
 import android.app.Notification;
 import android.app.NotificationManager;
+import android.app.PendingIntent;
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
@@ -26,7 +27,7 @@ import android.widget.Toast;
 public class StenoService extends Service {
 
     private Handler mHandler;
-	private NotificationManager mNM;
+	private NotificationManager notificationManager;
 
 	private PowerManager powerManager;
 	private WakeLock wakeLock;
@@ -93,9 +94,12 @@ public class StenoService extends Service {
 
     @Override
     public void onCreate() {
-        mNM = (NotificationManager)getSystemService(NOTIFICATION_SERVICE);
+    	Intent utteranceBroadcastIntent = new Intent();
+    	utteranceBroadcastIntent.setAction(StenoStarter.SERVICE_CREATED_KEY);
+    	LocalBroadcastManager.getInstance(this).sendBroadcast(utteranceBroadcastIntent);
 
-        // Display a notification while Steno is awake.
+    	// Display a notification while Steno is awake.
+        notificationManager = (NotificationManager)getSystemService(NOTIFICATION_SERVICE);
         showNotification();
     }
 
@@ -113,6 +117,8 @@ public class StenoService extends Service {
     	utteranceBroadcastIntent.setAction(StenoStarter.NEW_UTTERANCE_KEY);
     	utteranceBroadcastIntent.putExtra(StenoStarter.NEW_UTTERANCE_KEY, matches.get(0));
     	LocalBroadcastManager.getInstance(this).sendBroadcast(utteranceBroadcastIntent);
+
+    	showNotification(matches.get(0));
 
     	Log.d("Steno", transcriptCache.toString());
     }
@@ -231,8 +237,13 @@ public class StenoService extends Service {
 
     @Override
     public void onDestroy() {
+    	Intent utteranceBroadcastIntent = new Intent();
+    	utteranceBroadcastIntent.setAction(StenoStarter.SERVICE_TERMINATED_KEY);
+    	LocalBroadcastManager.getInstance(this).sendBroadcast(utteranceBroadcastIntent);
+
         // Cancel the persistent notification.
-        mNM.cancel(NOTIFICATION);
+        notificationManager.cancel(NOTIFICATION);
+
         listener = null;
         recognizer.cancel();
         recognizer.destroy();
@@ -250,17 +261,31 @@ public class StenoService extends Service {
     /**
      * Show a notification while this service is running.
      */
-    private void showNotification() {
+    private void showNotification(String mostRecentUtterance) {
+    	Intent showIntent = new Intent(StenoService.this, StenoStarter.class);
+    	PendingIntent pendingShowIntent = PendingIntent.getActivity(this, 0, showIntent, 0);
+
+    	Intent terminateIntent = new Intent(this, StenoService.class);
+        terminateIntent.putExtra("terminate", true);
+        PendingIntent pendingTerminateIntent = PendingIntent.getService(this, 0, terminateIntent, 0);
+
         Notification notification = new NotificationCompat.Builder(this)
         		.setSmallIcon(R.drawable.ic_launcher)
         		.setContentTitle("Steno")
         		.setContentText("Running...")
+        		.setContentIntent(pendingShowIntent)
+        		.setStyle(new NotificationCompat.BigTextStyle().bigText(mostRecentUtterance))
+        		.addAction(R.drawable.content_remove, "Stop listening", pendingTerminateIntent)
         		.setOngoing(true)
         		.build();
 
 
         // Send the notification.
-        mNM.notify(NOTIFICATION, notification);
+        notificationManager.notify(NOTIFICATION, notification);
+    }
+
+    private void showNotification() {
+    	showNotification("No phrases received yet.");
     }
 
     Runnable recognitionStopper = new Runnable() {
