@@ -136,6 +136,19 @@ body {
 	-webkit-border-radius: 15px;
 }
 
+.moments-box {
+	width: 800px;
+	min-height: 100px;
+	margin-top: 20px;
+	margin-left: auto;
+	margin-right: auto;
+	-webkit-border-radius: 5px;
+	background-color: white;
+	color: black;
+	box-shadow:  0 0 2px #050505, 0 0 0 6px #ffffff, 0 0 25px #918282;
+	padding: 10px;
+}
+
 #footer {
 	position: relative;
 	margin-top: -20px; /* negative value of footer height */
