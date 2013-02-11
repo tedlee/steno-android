@@ -18,6 +18,7 @@ import android.speech.RecognitionListener;
 import android.speech.RecognizerIntent;
 import android.speech.SpeechRecognizer;
 import android.support.v4.app.NotificationCompat;
+import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 import android.widget.Toast;
 
@@ -36,6 +37,7 @@ public class StenoService extends Service {
 	private TranscriptCache transcriptCache = new TranscriptCache(null);
 
 	public static StenoService instance;
+//	public static LocalBroadcastManager utteranceBroadcastManager = new LocalBroadcastManager();
 
 
 	//	private TextToSpeech tts;
@@ -75,8 +77,10 @@ public class StenoService extends Service {
         wakeLock.acquire(10 * 60 * 1000);
 
         mHandler = new Handler();
-        TranscriptUploader transcriptUploader = new TranscriptUploader(true);
-        mHandler.postDelayed(transcriptUploader, 60 * 60 * 1000);
+        Thread repeatedUploadThread = new Thread(new DelayedTranscriptUploader(true));
+        repeatedUploadThread.start();
+
+//        mHandler.postDelayed(transcriptUploader, 60 * 60 * 1000);
 
         listen();
         return START_STICKY;
@@ -104,6 +108,11 @@ public class StenoService extends Service {
     public void handleSpeech(List<String> matches) {
     	Log.d("Steno", "Best match: " + matches.get(0));
     	transcriptCache.addBlob(buildTranscriptBlob(matches));
+
+    	Intent utteranceBroadcastIntent = new Intent();
+    	utteranceBroadcastIntent.setAction(StenoStarter.NEW_UTTERANCE_KEY);
+    	utteranceBroadcastIntent.putExtra(StenoStarter.NEW_UTTERANCE_KEY, matches.get(0));
+    	LocalBroadcastManager.getInstance(this).sendBroadcast(utteranceBroadcastIntent);
 
     	Log.d("Steno", transcriptCache.toString());
     }
@@ -229,7 +238,9 @@ public class StenoService extends Service {
         recognizer.destroy();
 
         mHandler.removeCallbacks(recognitionStopper);
-        mHandler.post(new TranscriptUploader());
+        Thread uploadThread = new Thread(new TranscriptUploader());
+        uploadThread.start();
+//        mHandler.post(new TranscriptUploader());
 
         // Tell the user we stopped.
         Toast.makeText(this, "Steno service stopped.", Toast.LENGTH_SHORT).show();
@@ -289,19 +300,32 @@ public class StenoService extends Service {
 				attempts++;
 				StenoApiClient.uploadTranscripts(json);
 			} catch (Exception e) {
+				e.printStackTrace();
 				if (attempts < MAX_ATTEMPTS) {
 					try {
-						Thread.sleep(1 * 1000);
+						Thread.sleep(5 * 1000);
 						attemptUpload(json);
 					} catch (InterruptedException e1) {
 						Log.e("Steno", "TranscriptUploader interrupted during retry. Uploading abandoned.");
 					}
 				} else {
-					Toast.makeText(StenoService.this, "Could not upload transcript after " + MAX_ATTEMPTS + " attempts.", Toast.LENGTH_SHORT).show();
+					Log.e("Steno", "TranscriptUploader could not upload transcript after " + MAX_ATTEMPTS + " attempts. Uploading abandoned.");
+//					Toast.makeText(StenoService.this, "Could not upload transcript after " + MAX_ATTEMPTS + " attempts.", Toast.LENGTH_SHORT).show();
 				}
 			}
 		}
 
+    }
+
+    private class DelayedTranscriptUploader extends TranscriptUploader implements Runnable {
+    	public DelayedTranscriptUploader(boolean repeats) {
+    		super(repeats);
+    	}
+
+    	@Override
+    	public void run() {
+    		mHandler.postDelayed(new TranscriptUploader(repeats), 60 * 60 * 1000);
+    	}
     }
 
 

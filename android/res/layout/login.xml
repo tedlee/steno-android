@@ -85,6 +85,34 @@
 				    android:textColor="@color/white"
 				    android:visibility="gone"
 				/>
+				
+				<TextView 
+					android:id="@+id/most_recent_label"
+					android:layout_width="wrap_content"
+					android:layout_height="wrap_content"
+					android:layout_margin="5dp"
+				    android:paddingTop="30dp"
+				    android:textAllCaps="true"
+				    android:textSize="13dp"
+				    android:textColor="@color/white"
+				    android:text="Most Recent Phrase"
+				    android:visibility="gone"
+				/>
+				<TextView 
+					android:id="@+id/most_recent_content"
+					android:layout_width="fill_parent"
+					android:layout_height="wrap_content"
+					android:layout_margin="5dp"
+				    android:layout_marginTop="10dp"
+				    android:padding="5dp"
+				    android:textAllCaps="false"
+				    android:textSize="13dp"
+				    android:minLines="5"
+				    android:background="@drawable/textbox_background_rounded"
+				    android:textColor="@color/black"
+				    android:text=""
+				    android:visibility="gone"
+				/>
 			</LinearLayout>
 			<View 
 	 	        android:layout_width="0dp"
