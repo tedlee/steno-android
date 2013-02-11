@@ -110,6 +110,11 @@ public class StenoService extends Service {
 //    }
 
     public void handleSpeech(List<String> matches) {
+    	if (matches == null) {
+    		return;
+    	} else if (matches.size() == 0) {
+    		return;
+    	}
     	Log.d("Steno", "Best match: " + matches.get(0));
     	transcriptCache.addBlob(buildTranscriptBlob(matches));
 
