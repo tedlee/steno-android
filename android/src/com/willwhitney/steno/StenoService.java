@@ -78,7 +78,7 @@ public class StenoService extends Service {
 
         powerManager = (PowerManager) getSystemService(Context.POWER_SERVICE);
         wakeLock = powerManager.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "StenoLock");
-        wakeLock.acquire(10 * 60 * 1000);
+        wakeLock.acquire(24 * 60 * 60 * 1000);
 
         mHandler = new Handler();
         Thread repeatedUploadThread = new Thread(new DelayedTranscriptUploader(true));
@@ -129,7 +129,7 @@ public class StenoService extends Service {
 
     	showNotification(matches.get(0));
 
-    	Log.d("Steno", transcriptCache.toString());
+//    	Log.d("Steno", transcriptCache.toString());
     }
 
     public TranscriptBlob buildTranscriptBlob(List<String> interpretations) {
@@ -257,6 +257,7 @@ public class StenoService extends Service {
         listener = null;
         recognizer.cancel();
         recognizer.destroy();
+        wakeLock.release();
 
         mHandler.removeCallbacks(recognitionStopper);
         Thread uploadThread = new Thread(new TranscriptUploader());
