@@ -38,6 +38,7 @@ public class StenoService extends Service {
 	private TranscriptCache transcriptCache = new TranscriptCache(null);
 
 	public static StenoService instance;
+	public static boolean listening = false;
 //	public static LocalBroadcastManager utteranceBroadcastManager = new LocalBroadcastManager();
 
 
@@ -94,6 +95,7 @@ public class StenoService extends Service {
 
     @Override
     public void onCreate() {
+    	listening = true;
     	Intent utteranceBroadcastIntent = new Intent();
     	utteranceBroadcastIntent.setAction(StenoStarter.SERVICE_CREATED_KEY);
     	LocalBroadcastManager.getInstance(this).sendBroadcast(utteranceBroadcastIntent);
@@ -257,6 +259,8 @@ public class StenoService extends Service {
         Thread uploadThread = new Thread(new TranscriptUploader());
         uploadThread.start();
 //        mHandler.post(new TranscriptUploader());
+
+        listening = false;
 
         // Tell the user we stopped.
         Toast.makeText(this, "Steno service stopped.", Toast.LENGTH_SHORT).show();

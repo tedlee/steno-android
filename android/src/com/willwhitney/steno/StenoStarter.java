@@ -1,5 +1,7 @@
 package com.willwhitney.steno;
 
+//import com.crashlytics.android.Crashlytics;
+//import com.crashlytics.android.Crashlytics;
 import android.app.Activity;
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -26,8 +28,12 @@ public class StenoStarter extends Activity {
 
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.login);
+//        Crashlytics.start(this);
+
+		super.onCreate(savedInstanceState);
+//        Crashlytics.start(this);
+
+		setContentView(R.layout.login);
 
         loginButton = findViewById(R.id.login_button);
         logoutButton = findViewById(R.id.logout_button);
@@ -66,23 +72,31 @@ public class StenoStarter extends Activity {
         startService(serviceIntent);
 	}
 
+	private void setIsListening(boolean listening) {
+		if (listening) {
+			View mostRecentLabel = findViewById(R.id.most_recent_label);
+
+	        loginButton.setVisibility(View.GONE);
+	        logoutButton.setVisibility(View.VISIBLE);
+	        mostRecentLabel.setVisibility(View.VISIBLE);
+	        mostRecentContent.setVisibility(View.VISIBLE);
+	        usernameField.setEnabled(false);
+		} else {
+			logoutButton.setVisibility(View.GONE);
+	        loginButton.setVisibility(View.VISIBLE);
+	        usernameField.setEnabled(true);
+		}
+	}
+
 	private BroadcastReceiver newUtteranceReceiver = new BroadcastReceiver() {
 
 		@Override
 		public void onReceive(Context context, Intent intent) {
 			String action = intent.getAction();
 			if (action == SERVICE_CREATED_KEY) {
-				View mostRecentLabel = findViewById(R.id.most_recent_label);
-
-		        loginButton.setVisibility(View.GONE);
-		        logoutButton.setVisibility(View.VISIBLE);
-		        mostRecentLabel.setVisibility(View.VISIBLE);
-		        mostRecentContent.setVisibility(View.VISIBLE);
-		        usernameField.setEnabled(false);
+				setIsListening(true);
 			} else if (action == SERVICE_TERMINATED_KEY) {
-				logoutButton.setVisibility(View.GONE);
-		        loginButton.setVisibility(View.VISIBLE);
-		        usernameField.setEnabled(true);
+				setIsListening(false);
 			} else if (action == NEW_UTTERANCE_KEY) {
 				if (intent.hasExtra(NEW_UTTERANCE_KEY)) {
 					mostRecentContent.setText(intent.getStringExtra(NEW_UTTERANCE_KEY));
@@ -99,6 +113,7 @@ public class StenoStarter extends Activity {
         filter.addAction(SERVICE_CREATED_KEY);
         filter.addAction(SERVICE_TERMINATED_KEY);
         LocalBroadcastManager.getInstance(this).registerReceiver(newUtteranceReceiver, filter);
+        setIsListening(StenoService.listening);
 	}
 
 	@Override
