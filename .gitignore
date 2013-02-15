@@ -2,3 +2,4 @@
 .esproj
 android/bin
 android/gen
+android/.settings

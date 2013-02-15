@@ -80,7 +80,9 @@ public class StenoService extends Service {
         	} else if (intent.hasExtra("username")) {
         		transcriptCache = new TranscriptCache(intent.getStringExtra("username"));
         	}
-    	}
+    	} else {
+            return START_NOT_STICKY;
+        }
 
     	instance = this;
         Log.i("Steno", "Received start id " + startId + ": " + intent);
@@ -98,7 +100,7 @@ public class StenoService extends Service {
 
         powerManager = (PowerManager) getSystemService(Context.POWER_SERVICE);
         wakeLock = powerManager.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "StenoLock");
-        wakeLock.acquire(10 * 60 * 1000);
+        wakeLock.acquire(24 * 60 * 60 * 1000);
 
         mHandler = new Handler();
         Thread repeatedUploadThread = new Thread(new DelayedTranscriptUploader(true));
@@ -157,7 +159,7 @@ public class StenoService extends Service {
 
     	showNotification(matches.get(0));
 
-    	Log.d("Steno", transcriptCache.toString());
+//    	Log.d("Steno", transcriptCache.toString());
     }
 
     public TranscriptBlob buildTranscriptBlob(List<String> interpretations) {
@@ -302,6 +304,8 @@ public class StenoService extends Service {
 			e.printStackTrace();
 		}
 		this.unregisterReceiver(btReceiver);
+
+        wakeLock.release();
 
         mHandler.removeCallbacks(recognitionStopper);
         Thread uploadThread = new Thread(new TranscriptUploader());
