@@ -58,7 +58,9 @@ public class StenoService extends Service {
         	} else if (intent.hasExtra("username")) {
         		transcriptCache = new TranscriptCache(intent.getStringExtra("username"));
         	}
-    	}
+    	} else {
+            return START_NOT_STICKY;
+        }
 
     	instance = this;
         Log.i("Steno", "Received start id " + startId + ": " + intent);
