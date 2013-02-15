@@ -102,7 +102,7 @@ public class StenoService extends Service {
 
     	// Display a notification while Steno is awake.
         notificationManager = (NotificationManager)getSystemService(NOTIFICATION_SERVICE);
-        showNotification();
+        startForeground(NOTIFICATION, buildNotification("No phrases received yet."));
     }
 
 //    public void speak(String words) {
@@ -249,6 +249,7 @@ public class StenoService extends Service {
     	LocalBroadcastManager.getInstance(this).sendBroadcast(utteranceBroadcastIntent);
 
         // Cancel the persistent notification.
+    	stopForeground(true);
         notificationManager.cancel(NOTIFICATION);
 
         listener = null;
@@ -271,6 +272,10 @@ public class StenoService extends Service {
      * Show a notification while this service is running.
      */
     private void showNotification(String mostRecentUtterance) {
+        notificationManager.notify(NOTIFICATION, buildNotification(mostRecentUtterance));
+    }
+
+    private Notification buildNotification(String mostRecentUtterance) {
     	Intent showIntent = new Intent(StenoService.this, StenoStarter.class);
     	PendingIntent pendingShowIntent = PendingIntent.getActivity(this, 0, showIntent, 0);
 
@@ -287,14 +292,7 @@ public class StenoService extends Service {
         		.addAction(R.drawable.content_remove, "Stop listening", pendingTerminateIntent)
         		.setOngoing(true)
         		.build();
-
-
-        // Send the notification.
-        notificationManager.notify(NOTIFICATION, notification);
-    }
-
-    private void showNotification() {
-    	showNotification("No phrases received yet.");
+        return notification;
     }
 
     Runnable recognitionStopper = new Runnable() {
