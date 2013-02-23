@@ -2,12 +2,17 @@ package com.willwhitney.steno;
 import java.util.ArrayList;
 import java.util.List;
 
+import cc.gtank.bt.Bluetooth;
+import cc.gtank.bt.Honeycomb;
+
 import android.app.Notification;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.location.Location;
 import android.location.LocationManager;
 import android.os.Bundle;
@@ -47,6 +52,23 @@ public class StenoService extends Service {
     // Unique Identification Number for the Notification.
     // We use it on Notification start, and to cancel it.
     private int NOTIFICATION = 0;
+    	
+	private Bluetooth bluetooth;
+	private boolean bluetoothConnected;
+	
+    private BroadcastReceiver btReceiver = new BroadcastReceiver() {
+		public void onReceive(Context context, Intent intent) {
+			Log.d("Steno", "Intent from BluetoothState: " + intent);
+			if(intent.getAction().equals(Bluetooth.BLUETOOTH_STATE)) {
+				if (intent.hasExtra("bluetooth_connected")) {
+					bluetoothConnected = intent.getExtras().getBoolean("bluetooth_connected");
+					if(bluetoothConnected) {
+						listen();
+					}
+				} 
+			}
+		}
+    };
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
@@ -85,6 +107,14 @@ public class StenoService extends Service {
         repeatedUploadThread.start();
 
 //        mHandler.postDelayed(transcriptUploader, 60 * 60 * 1000);
+
+        bluetooth = new Honeycomb();
+        bluetooth.setContext(this);
+        if(bluetooth.obtainProxy()) {
+        	this.registerReceiver(btReceiver, new IntentFilter(Bluetooth.BLUETOOTH_STATE));
+        } else {
+        	Log.d("Steno", "Unable to obtain bluetooth proxy");
+        }
 
         listen();
         return START_STICKY;
@@ -161,6 +191,14 @@ public class StenoService extends Service {
 //    }
 
     public void listen() {
+    	
+    	Log.d("Steno", "Listen called, BT available: " + bluetooth.isAvailable() + " bluetoothConnected: " + bluetoothConnected);
+    	
+    	if(bluetooth.isAvailable() && !bluetoothConnected) {
+    		Log.d("Steno", "Found headset, attempting to start");
+    		bluetooth.startVoiceRecognition();
+    		return;
+    	}
 
     	Intent intent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
     	intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM);
@@ -168,6 +206,7 @@ public class StenoService extends Service {
     	if (recognizer == null) {
     		recognizer = SpeechRecognizer.createSpeechRecognizer(this);
     	}
+    	
     	listener = new RecognitionListener() {
 
     		@Override
@@ -257,6 +296,15 @@ public class StenoService extends Service {
         listener = null;
         recognizer.cancel();
         recognizer.destroy();
+        
+        bluetooth.stopVoiceRecognition();
+        try {
+			bluetooth.releaseProxy();
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		this.unregisterReceiver(btReceiver);
+
         wakeLock.release();
 
         mHandler.removeCallbacks(recognitionStopper);

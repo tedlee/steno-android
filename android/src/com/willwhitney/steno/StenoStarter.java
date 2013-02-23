@@ -56,6 +56,7 @@ public class StenoStarter extends Activity {
 				stop();
 			}
         });
+        
 	}
 
 	private void start() {
