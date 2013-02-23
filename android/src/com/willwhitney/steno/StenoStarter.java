@@ -1,5 +1,6 @@
 package com.willwhitney.steno;
 
+import com.crashlytics.android.Crashlytics;
 //import com.crashlytics.android.Crashlytics;
 //import com.crashlytics.android.Crashlytics;
 import android.app.Activity;
@@ -28,11 +29,10 @@ public class StenoStarter extends Activity {
 
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
-//        Crashlytics.start(this);
-
 		super.onCreate(savedInstanceState);
-//        Crashlytics.start(this);
 
+		Crashlytics.start(this);
+		
 		setContentView(R.layout.login);
 
         loginButton = findViewById(R.id.login_button);
