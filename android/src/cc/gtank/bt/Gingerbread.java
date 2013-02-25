@@ -8,6 +8,7 @@ import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 
 import android.annotation.TargetApi;
+import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.content.Context;
 import android.content.Intent;
@@ -105,6 +106,10 @@ public class Gingerbread implements Bluetooth {
                 e.printStackTrace();
             }
         }
+    }
+    
+    public boolean isEnabled() {
+    	return BluetoothAdapter.getDefaultAdapter().isEnabled();
     }
     
     public boolean isAvailable() {

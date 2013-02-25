@@ -85,9 +85,17 @@ public class Honeycomb extends BroadcastReceiver implements BluetoothProfile.Ser
             bluetoothHeadset.stopVoiceRecognition(btDevice);
     	} 
     }
+    
+    public boolean isEnabled() {
+    	return BluetoothAdapter.getDefaultAdapter().isEnabled();
+    }
 
     public boolean isAvailable() {
-        return bluetoothHeadset != null && bluetoothHeadset.getConnectedDevices().size() > 0;
+    	if(isEnabled()) {
+    		return bluetoothHeadset != null && bluetoothHeadset.getConnectedDevices().size() > 0;
+    	} else {
+    		return false;
+    	}
     }
     
     public VOICE getVoiceState() {

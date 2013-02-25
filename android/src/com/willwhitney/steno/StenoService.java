@@ -15,7 +15,6 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.location.Location;
 import android.location.LocationManager;
-import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
@@ -111,11 +110,13 @@ public class StenoService extends Service {
 
         bluetooth = new Honeycomb();
         bluetooth.setContext(this);
-        if(bluetooth.obtainProxy()) {
-        	this.registerReceiver(btReceiver, new IntentFilter(Bluetooth.BLUETOOTH_STATE));
-        	Log.d("Steno", "Got bluetooth proxy");
-        } else {
-        	Log.d("Steno", "Unable to obtain bluetooth proxy");
+        if(bluetooth.isEnabled()) {
+        	if(bluetooth.obtainProxy()) {
+        		this.registerReceiver(btReceiver, new IntentFilter(Bluetooth.BLUETOOTH_STATE));
+        		Log.d("Steno", "Got bluetooth proxy");
+        	} else {
+        		Log.d("Steno", "Unable to obtain bluetooth proxy");
+        	}
         }
 
         listen();
@@ -300,17 +301,16 @@ public class StenoService extends Service {
         recognizer.destroy();
         recognizer = null;
         
-        if(bluetooth.isAvailable()) {
+        if(bluetooth.isEnabled()) {
         	bluetooth.stopVoiceRecognition();
+        	try {
+        		bluetooth.releaseProxy();
+        	} catch (Exception e) {
+        		e.printStackTrace();
+        	}
+        	this.unregisterReceiver(btReceiver);
         }
-        
-        try {
-        	bluetooth.releaseProxy();
-        } catch (Exception e) {
-        	e.printStackTrace();
-        }
-        this.unregisterReceiver(btReceiver);
-
+       
         wakeLock.release();
 
         mHandler.removeCallbacks(recognitionStopper);
