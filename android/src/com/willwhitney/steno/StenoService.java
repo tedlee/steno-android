@@ -360,12 +360,11 @@ public class StenoService extends Service {
     };
 
     private class TranscriptUploader implements Runnable {
-    	public static final int MAX_ATTEMPTS = 5;
-
-    	public boolean repeats;
-    	private int attempts = 0;
+    	public static final int REPEAT_DELAY_SECONDS = 60 * 60;
     	
-    	private AsyncTask<String, Void, Boolean> uploadTask;
+    	public boolean repeats;
+    	
+    	private StenoApiClient apiClient;
     	
     	public TranscriptUploader() {
     		this(false);
@@ -373,7 +372,7 @@ public class StenoService extends Service {
 
     	public TranscriptUploader(boolean repeats) {
     		this.repeats = repeats;
-    		this.uploadTask = new StenoApiClient();
+    		this.apiClient = new StenoApiClient();
     	}
 
 		@Override
@@ -381,29 +380,13 @@ public class StenoService extends Service {
 			String json = transcriptCache.dumpJson();
 			attemptUpload(json);
 			if (repeats) {
-				mHandler.postDelayed(this, 60 * 60 * 1000);
+				mHandler.postDelayed(this, REPEAT_DELAY_SECONDS * 1000);
 			}
 		}
 
 		private void attemptUpload(String json) {
 			Log.d("Steno", "Uploading transcripts.");
-			try {
-				attempts++;
-				uploadTask.execute(json);
-			} catch (Exception e) {
-				e.printStackTrace();
-				if (attempts < MAX_ATTEMPTS) {
-					try {
-						Thread.sleep(5 * 1000);
-						attemptUpload(json);
-					} catch (InterruptedException e1) {
-						Log.e("Steno", "TranscriptUploader interrupted during retry. Uploading abandoned.");
-					}
-				} else {
-					Log.e("Steno", "TranscriptUploader could not upload transcript after " + MAX_ATTEMPTS + " attempts. Uploading abandoned.");
-//					Toast.makeText(StenoService.this, "Could not upload transcript after " + MAX_ATTEMPTS + " attempts.", Toast.LENGTH_SHORT).show();
-				}
-			}
+			apiClient.uploadTranscripts(json);
 		}
 
     }
@@ -415,7 +398,7 @@ public class StenoService extends Service {
 
     	@Override
     	public void run() {
-    		mHandler.postDelayed(new TranscriptUploader(repeats), 60 * 60 * 1000);
+    		mHandler.postDelayed(new TranscriptUploader(repeats), REPEAT_DELAY_SECONDS * 1000);
     	}
     }
 
