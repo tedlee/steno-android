@@ -298,6 +298,7 @@ public class StenoService extends Service {
         listener = null;
         recognizer.cancel();
         recognizer.destroy();
+        recognizer = null;
         
         if(bluetooth.isAvailable()) {
         	bluetooth.stopVoiceRecognition();
