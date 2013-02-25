@@ -15,6 +15,7 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.location.Location;
 import android.location.LocationManager;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
@@ -112,6 +113,7 @@ public class StenoService extends Service {
         bluetooth.setContext(this);
         if(bluetooth.obtainProxy()) {
         	this.registerReceiver(btReceiver, new IntentFilter(Bluetooth.BLUETOOTH_STATE));
+        	Log.d("Steno", "Got bluetooth proxy");
         } else {
         	Log.d("Steno", "Unable to obtain bluetooth proxy");
         }
@@ -297,13 +299,16 @@ public class StenoService extends Service {
         recognizer.cancel();
         recognizer.destroy();
         
-        bluetooth.stopVoiceRecognition();
+        if(bluetooth.isAvailable()) {
+        	bluetooth.stopVoiceRecognition();
+        }
+        
         try {
-			bluetooth.releaseProxy();
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-		this.unregisterReceiver(btReceiver);
+        	bluetooth.releaseProxy();
+        } catch (Exception e) {
+        	e.printStackTrace();
+        }
+        this.unregisterReceiver(btReceiver);
 
         wakeLock.release();
 
@@ -359,13 +364,16 @@ public class StenoService extends Service {
 
     	public boolean repeats;
     	private int attempts = 0;
-
+    	
+    	private AsyncTask<String, Void, Boolean> uploadTask;
+    	
     	public TranscriptUploader() {
-    		this.repeats = false;
+    		this(false);
     	}
 
     	public TranscriptUploader(boolean repeats) {
     		this.repeats = repeats;
+    		this.uploadTask = new StenoApiClient();
     	}
 
 		@Override
@@ -381,7 +389,7 @@ public class StenoService extends Service {
 			Log.d("Steno", "Uploading transcripts.");
 			try {
 				attempts++;
-				StenoApiClient.uploadTranscripts(json);
+				uploadTask.execute(json);
 			} catch (Exception e) {
 				e.printStackTrace();
 				if (attempts < MAX_ATTEMPTS) {
