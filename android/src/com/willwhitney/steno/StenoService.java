@@ -118,6 +118,71 @@ public class StenoService extends Service {
         		Log.d("Steno", "Unable to obtain bluetooth proxy");
         	}
         }
+        
+    	listener = new RecognitionListener() {
+
+    		@Override
+    	    public void onResults(Bundle results) {
+    	        ArrayList<String> voiceResults = results.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION);
+    	        if (voiceResults == null) {
+    	            Log.e("Steno", "No voice results");
+    	        } else {
+//    	            Log.d("Steno", "Printing matches: ");
+//    	            for (String match : voiceResults) {
+//    	                Log.d("Steno", match);
+//    	            }
+    	        }
+    	        StenoService.this.handleSpeech(voiceResults);
+    	        StenoService.this.listen();
+    	    }
+
+    	    @Override
+    	    public void onReadyForSpeech(Bundle params) {
+    	        Log.d("Steno", "Ready for speech");
+    	    }
+
+    	    @Override
+    	    public void onError(int error) {
+    	        Log.e("Steno", "Error listening for speech: " + error);
+    	        mHandler.removeCallbacks(recognitionStopper);
+    	        StenoService.this.listen();
+    	    }
+
+    	    @Override
+    	    public void onBeginningOfSpeech() {
+    	        Log.d("Steno", "Speech starting");
+    	        mHandler.removeCallbacks(recognitionStopper);
+    	    }
+
+			@Override
+			public void onBufferReceived(byte[] buffer) {
+				Log.d("Steno", "Speech buffer received: " + buffer);
+
+			}
+
+			@Override
+			public void onEndOfSpeech() {
+				Log.d("Steno", "Speech ended.");
+			}
+
+			@Override
+			public void onEvent(int eventType, Bundle params) {
+				Log.d("Steno", "Speech event received.");
+
+			}
+
+			@Override
+			public void onPartialResults(Bundle partialResults) {
+				Log.d("Steno", "Speech partial results received.");
+
+			}
+
+			@Override
+			public void onRmsChanged(float rmsdB) {
+				// TODO Auto-generated method stub
+
+			}
+    	};
 
         listen();
         return START_STICKY;
@@ -206,74 +271,15 @@ public class StenoService extends Service {
     	Intent intent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
     	intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM);
     	intent.putExtra(RecognizerIntent.EXTRA_CALLING_PACKAGE, "com.willwhitney.Steno");
-    	if (recognizer == null) {
-    		recognizer = SpeechRecognizer.createSpeechRecognizer(this);
-    	}
     	
-    	listener = new RecognitionListener() {
-
-    		@Override
-    	    public void onResults(Bundle results) {
-    	        ArrayList<String> voiceResults = results.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION);
-    	        if (voiceResults == null) {
-    	            Log.e("Steno", "No voice results");
-    	        } else {
-//    	            Log.d("Steno", "Printing matches: ");
-//    	            for (String match : voiceResults) {
-//    	                Log.d("Steno", match);
-//    	            }
-    	        }
-    	        StenoService.this.handleSpeech(voiceResults);
-    	        StenoService.this.listen();
-    	    }
-
-    	    @Override
-    	    public void onReadyForSpeech(Bundle params) {
-    	        Log.d("Steno", "Ready for speech");
-    	    }
-
-    	    @Override
-    	    public void onError(int error) {
-    	        Log.e("Steno", "Error listening for speech: " + error);
-    	        mHandler.removeCallbacks(recognitionStopper);
-    	        StenoService.this.listen();
-    	    }
-
-    	    @Override
-    	    public void onBeginningOfSpeech() {
-    	        Log.d("Steno", "Speech starting");
-    	        mHandler.removeCallbacks(recognitionStopper);
-    	    }
-
-			@Override
-			public void onBufferReceived(byte[] buffer) {
-				Log.d("Steno", "Speech buffer received: " + buffer);
-
-			}
-
-			@Override
-			public void onEndOfSpeech() {
-				Log.d("Steno", "Speech ended.");
-			}
-
-			@Override
-			public void onEvent(int eventType, Bundle params) {
-				Log.d("Steno", "Speech event received.");
-
-			}
-
-			@Override
-			public void onPartialResults(Bundle partialResults) {
-				Log.d("Steno", "Speech partial results received.");
-
-			}
-
-			@Override
-			public void onRmsChanged(float rmsdB) {
-				// TODO Auto-generated method stub
-
-			}
-    	};
+    	//if (recognizer != null) {
+    		//Log.d("Steno", "canceling");
+    		//recognizer.cancel();
+    		//Log.d("Steno", "destroying");
+    		//recognizer.destroy();
+    	//}
+    	
+    	recognizer = SpeechRecognizer.createSpeechRecognizer(this);
 
     	try {
 	    	mHandler.postDelayed(recognitionStopper, 3000);
