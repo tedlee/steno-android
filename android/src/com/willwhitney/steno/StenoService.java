@@ -272,12 +272,12 @@ public class StenoService extends Service {
     	intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM);
     	intent.putExtra(RecognizerIntent.EXTRA_CALLING_PACKAGE, "com.willwhitney.Steno");
     	
-    	//if (recognizer != null) {
+    	if (recognizer != null) {
     		//Log.d("Steno", "canceling");
     		//recognizer.cancel();
-    		//Log.d("Steno", "destroying");
-    		//recognizer.destroy();
-    	//}
+    		Log.d("Steno", "destroying recognizer");
+    		recognizer.destroy();
+    	}
     	
     	recognizer = SpeechRecognizer.createSpeechRecognizer(this);
 
